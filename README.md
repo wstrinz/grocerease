@@ -7,7 +7,7 @@ This guide provides instructions for setting up the Grocery List App in a local 
 
 ## Prerequisites
 
-- Node.js (v14 or later)
+- Node.js (v20 or later)
 - npm (v6 or later)
 - Redis server
 - An OpenAI API key
