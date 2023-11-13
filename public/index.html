@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#673ab8">
+    <meta name="description" content="Grocery list app">
+
+    <title>Grocery List App</title>
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="images/icon.png">
+    <link rel="apple-touch-icon" href="images/icon.png">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css"
+    />
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
+    </script>
+
+    <!-- Spinner Styles -->
+    <style>
+      .loader {
+        border: 16px solid #f3f3f3; /* Light grey */
+        border-top: 16px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s linear infinite;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        margin: -60px 0 0 -60px; /* Offset by half of the spinner's size for centering */
+        z-index: 1000; /* Ensure it's above other items */
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Initially hidden */
+      #spinner {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="section">
+      <div class="container">
+        <h1 class="title">Grocery List</h1>
+        <!-- Form to upload image -->
+        <div class="file">
+          <label class="file-label">
+            <input
+              class="file-input"
+              type="file"
+              name="groceryListImage"
+              id="groceryListImage"
+            />
+            <span class="file-cta">
+              <span class="file-icon">
+                <i class="fas fa-camera"></i>
+              </span>
+              <span class="file-label">Snap your list</span>
+            </span>
+          </label>
+        </div>
+        <br/>
+        <!-- Spinner Container -->
+        <div id="spinner" style="display: none">
+          <div class="loader"></div>
+        </div>
+        <!-- Display area for transcribed list -->
+        <div id="groceryListDisplay" class="content"></div>
+      </div>
+    </section>
+    <script src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+    <script src="/client.js"></script>
+  </body>
+</html>
