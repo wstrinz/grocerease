@@ -76,7 +76,7 @@ async function transcribeImage(imageData) {
     This is a picture of a grocery list. Please transcribe it, and organize the items into categories.
 
     If you are absolutely certain this is not a picture of a grocery list, please say so. Also say something moderately insulting about what the user wrote, in a style one might find in a Terry Pratchett book. Really, seriously roast them.
-    Don't actually mention Terry Pratchett or any specific items from his books, just use the style. Don't specifically mention groceries or lists, and don't use any newlines.
+    Don't mention Terry Pratchett or any specific items from his books, just use the style. Don't use the words "Discworld" or "Terry", and limit references to any thematic elements from the books. Don't specifically mention groceries or lists, and don't use any newlines.
 
     If this is a picture of a grocery list, please transcribe it and organize the items into categories according to the following rules:
 
