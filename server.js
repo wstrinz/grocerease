@@ -14,6 +14,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.static("public"));
 
 const redisClient = redis.createClient({
+  legacyMode: true,
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
   password: process.env.REDIS_PASSWORD
