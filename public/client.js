@@ -30,14 +30,22 @@ document
   });
 
 async function transcribeImage(imageData) {
+  const token = localStorage.getItem("jwtToken");
+
+  if (!token) {
+    checkAuthentication();
+    return;
+  }
+
   showSpinner();
 
   const response = await fetch("/transcribe", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: "Bearer " + token,
     },
-    body: JSON.stringify({ imagePath: imageData }), // Send the base64 image data to the server
+    body: JSON.stringify({ imagePath: imageData }),
   });
 
   if (!response.ok) {
@@ -54,11 +62,9 @@ async function transcribeImage(imageData) {
   hideSpinner();
 
   if (data.error) {
-
     const displayArea = document.getElementById("groceryListDisplay");
     displayArea.innerHTML = ""; // Clear existing content
     displayArea.textContent = data.error;
-
   } else {
     const items = JSON.parse(data.text.tool_calls[0].function.arguments).items;
 
@@ -169,8 +175,50 @@ function updateDisplayWithCheckboxes(items) {
   saveState(savedState);
 }
 
+function checkAuthentication() {
+  const token = localStorage.getItem("jwtToken");
+  if (!token) {
+    showModal();
+  }
+}
+
+function showModal() {
+  document.getElementById("loginModal").classList.add("is-active");
+}
+
+function closeModal() {
+  document.getElementById("loginModal").classList.remove("is-active");
+}
+
+async function authenticateUser() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    const response = await fetch("/authenticate", {
+      method: "POST",
+      headers: {
+        Authorization: "Basic " + btoa(username + ":" + password),
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      localStorage.setItem("jwtToken", data.token);
+      closeModal();
+    } else {
+      alert("Authentication failed. Please try again.");
+    }
+  } catch (error) {
+    console.error("Authentication error:", error);
+  }
+}
+
 // Call updateDisplayWithCheckboxes with the saved state when the page loads
-document.addEventListener("DOMContentLoaded", (event) => {
+document.addEventListener("DOMContentLoaded", async (event) => {
+  checkAuthentication();
+
   const savedState = loadState();
   const savedItems = Object.keys(savedState).map((key) => ({
     name: key,

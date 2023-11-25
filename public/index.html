@@ -82,6 +82,39 @@
         <div id="groceryListDisplay" class="content"></div>
       </div>
     </section>
+
+    <div id="loginModal" class="modal">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Login Required</p>
+          <button class="delete" aria-label="close" onclick="closeModal()"></button>
+        </header>
+        <section class="modal-card-body">
+          <div class="field">
+            <p class="control has-icons-left">
+              <input class="input" type="text" id="username" placeholder="Username">
+              <span class="icon is-small is-left">
+                <i class="fas fa-user"></i>
+              </span>
+            </p>
+          </div>
+          <div class="field">
+            <p class="control has-icons-left">
+              <input class="input" type="password" id="password" placeholder="Password">
+              <span class="icon is-small is-left">
+                <i class="fas fa-lock"></i>
+              </span>
+            </p>
+          </div>
+        </section>
+        <footer class="modal-card-foot">
+          <button class="button is-success" onclick="authenticateUser()">Login</button>
+          <button class="button" onclick="closeModal()">Cancel</button>
+        </footer>
+      </div>
+    </div>
+
     <script src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
     <script src="/client.js"></script>
   </body>

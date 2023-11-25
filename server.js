@@ -1,45 +1,14 @@
-require("dotenv").config(); // This line should be at the very top
+require("dotenv").config();
 const express = require("express");
 const { OpenAI } = require("openai");
 const fs = require("fs").promises;
 const app = express();
 const path = require("path");
-const session = require("express-session");
 const basicAuth = require("express-basic-auth");
-const RedisStore = require('connect-redis').default;
-const redis = require('redis');
+const jwt = require("jsonwebtoken");
 
 app.use(express.json({ limit: "50mb" }));
-
 app.use(express.static("public"));
-
-const redisClient = redis.createClient({
-  legacyMode: true,
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-  password: process.env.REDIS_PASSWORD
-});
-
-redisClient.on('error', function(err) {
-  console.log('Could not establish a connection with Redis. ' + err);
-});
-redisClient.on('connect', function(err) {
-  console.log('Connected to Redis successfully');
-});
-
-// Session configuration
-app.use(
-  session({
-    store: new RedisStore({ client: redisClient }),
-    secret: process.env.SECRET_KEY_BASE,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 6 * 30.44 * 24 * 60 * 60 * 1000, // 6 months
-    }
-  })
-);
 
 // Authentication middleware
 const myAuthorizer = (username, password) => {
@@ -55,22 +24,39 @@ const myAuthorizer = (username, password) => {
   return userMatches & passwordMatches;
 };
 
-const authMiddleware = (req, res, next) => {
-  if (req.session.authenticated) {
-    return next(); // Skip auth check if session is authenticated
+// Generate JWT Token
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '120d' });
+};
+
+// Verify JWT Token
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).send("Access Denied: No token provided.");
   }
 
-  basicAuth({ authorizer: myAuthorizer, challenge: true })(req, res, () => {
-    req.session.authenticated = true; // Set session as authenticated
+  try {
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = verified;
     next();
-  });
+  } catch (error) {
+    res.status(400).send("Invalid Token");
+  }
 };
 
 // Apply auth middleware
-app.use(authMiddleware);
+app.use((req, res, next) => {
+  if (req.path === '/authenticate') {
+    return next(); // Skip auth for the authentication route
+  }
+
+  verifyToken(req, res, next);
+});
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
-
+const openaiLocal = new OpenAI({ baseURL: "http://localhost:8080" });
 
 async function transcribeImage(imageData) {
   const message = `
@@ -171,6 +157,14 @@ async function parseItems(text) {
     tool_choice: "auto", // auto is default, but we'll be explicit
   });
 
+
+  // const response = await openaiLocal.chat.completions.create({
+  //   model: "zephyr-7b-beta",
+  //   messages: messages,
+  //   tools: tools,
+  //   tool_choice: "auto", // auto is default, but we'll be explicit
+  // });
+
   console.log(response.choices[0].message.tool_calls);
   const responseMessage = response.choices[0].message;
 
@@ -215,6 +209,15 @@ async function isGrocerylist(text) {
     tool_choice: "auto", // auto is default, but we'll be explicit
   });
 
+  // const response = await openaiLocal.chat.completions.create({
+  //   model: "zephyr-7b-beta",
+  //   messages: messages,
+  //   tools: tools,
+  //   tool_choice: "auto", // auto is default, but we'll be explicit
+  // });
+
+  // console.log(JSON.stringify(response));
+
   const isList = JSON.parse(
     response.choices[0].message.tool_calls[0].function.arguments
   ).isGrocerylist;
@@ -223,6 +226,11 @@ async function isGrocerylist(text) {
 
   return isList;
 }
+
+app.post('/authenticate', basicAuth({ authorizer: myAuthorizer, challenge: true }), (req, res) => {
+  const token = generateToken(req.auth.user);
+  res.send({ token });
+});
 
 app.post("/transcribe", async (req, res) => {
   const base64image = req.body.imagePath; // Assuming the request includes the path to the image
@@ -241,7 +249,6 @@ app.post("/transcribe", async (req, res) => {
       res.json({ error: transcribed });
     }
   } catch (error) {
-    debugger;
     console.error(error);
     res
       .status(500)
