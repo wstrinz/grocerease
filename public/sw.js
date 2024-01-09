@@ -5,11 +5,14 @@ const CURRENT_CACHES = {
 const OFFLINE_URLS = [
   '/index.html',
   '/client.js',
+  '/multiple-upload.js', // New JS file for handling multiple uploads
+  '/styles/multiple-upload.css', // New CSS file for styling the multiple upload feature
   // Include other assets here, e.g., CSS, images
   'https://use.fontawesome.com/releases/v5.15.4/js/all.js',
   'https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css',
   'images/icon-192.png',
-  'images/icon-512.png'
+  'images/icon-512.png',
+  'images/multiple-upload-icon.png' // New icon for multiple upload feature
   // Add URLs for other images and icons as needed
 ];
 
@@ -41,7 +44,6 @@ self.addEventListener('fetch', (event) => {
             .then(cache => {
               cache.put(event.request, responseToCache);
             });
-
           return response;
         });
       })
