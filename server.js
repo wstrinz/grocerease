@@ -58,7 +58,7 @@ app.use((req, res, next) => {
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 const openaiLocal = new OpenAI({ baseURL: "http://localhost:8080" });
 
-async function transcribeImage(imageData) {
+async function transcribeImage(imagesData) {
   const message = `
     This is a picture of a grocery list. Please transcribe it, and organize the items into categories.
 
@@ -78,7 +78,9 @@ async function transcribeImage(imageData) {
     Only list the items and categories, not any speculation or explanation.
   `;
 
-  const response = await openai.chat.completions.create({
+  let transcriptions = [];
+  for (const imageData of imagesData) {
+    const response = await openai.chat.completions.create({
     model: "gpt-4-vision-preview",
     messages: [
       {
@@ -98,9 +100,10 @@ async function transcribeImage(imageData) {
     max_tokens: 4000,
   });
 
-  console.log(response.choices[0]);
-
-  return response.choices[0].message.content;
+      console.log(response.choices[0]);
+    transcriptions.push(response.choices[0].message.content);
+  }
+  return transcriptions;
 }
 
 async function parseItems(text) {
@@ -233,10 +236,10 @@ app.post('/authenticate', basicAuth({ authorizer: myAuthorizer, challenge: true 
 });
 
 app.post("/transcribe", async (req, res) => {
-  const base64image = req.body.imagePath; // Assuming the request includes the path to the image
+  const base64images = req.body.imagePaths; // Assuming the request includes the path to the image
 
   try {
-    const transcribed = await transcribeImage(base64image);
+    const transcribedLists = await Promise.all(base64images.map(image => transcribeImage(image)));
 
     const isList = await isGrocerylist(transcribed);
 
